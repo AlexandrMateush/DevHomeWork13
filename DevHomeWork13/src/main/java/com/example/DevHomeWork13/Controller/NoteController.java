@@ -23,7 +23,7 @@ public class NoteController {
         return "list";
     }
 
-    @GetMapping("/id")
+    @GetMapping("/edit")
     public String editNoteForm(@RequestParam long id, Model model) {
         if (!notes.containsKey(id)) {
             throw new IllegalArgumentException("Note with id " + id + " not found");
