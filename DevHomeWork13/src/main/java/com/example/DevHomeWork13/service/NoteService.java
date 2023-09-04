@@ -2,46 +2,34 @@ package com.example.DevHomeWork13.service;
 
 
 import com.example.DevHomeWork13.entity.Note;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
-public
-class NoteService {
-    private Map<Long, Note> notes = new HashMap<>();
-    private long nextId = 1;
+public class NoteService {
 
-    public List<Note> listAll() {
-        return new ArrayList<>(notes.values());
+    private final NoteRepository noteRepository;
+
+    @Autowired
+    public NoteService(NoteRepository noteRepository) {
+        this.noteRepository = noteRepository;
     }
 
-    public Note add(Note note) {
-        note.setId(nextId);
-        notes.put(nextId, note);
-        nextId++;
-        return note;
+    public List<Note> getAllNotes() {
+        return (List<Note>) noteRepository.findAll();
     }
 
-    public void deleteById(long id) {
-        if (!notes.containsKey(id)) {
-            throw new NoSuchElementException("Note with id " + id + " not found");
-        }
-        notes.remove(id);
+    public Optional<Note> getNoteById(Long id) {
+        return noteRepository.findById(id);
     }
 
-    public void update(Note note) {
-        long id = note.getId();
-        if (!notes.containsKey(id)) {
-            throw new NoSuchElementException("Note with id " + id + " not found");
-        }
-        notes.put(id, note);
+    public Note saveNote(Note note) {
+        return noteRepository.save(note);
     }
 
-    public Note getById(long id) {
-        if (!notes.containsKey(id)) {
-            throw new NoSuchElementException("Note with id " + id + " not found");
-        }
-        return notes.get(id);
+    public void deleteNoteById(Long id) {
+        noteRepository.deleteById(id);
     }
 }
