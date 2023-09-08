@@ -1,56 +1,84 @@
 package com.example.DevHomeWork13.Controller;
 
 import com.example.DevHomeWork13.entity.Note;
+import com.example.DevHomeWork13.service.NoteService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 @Controller
 @RequestMapping("/note")
 public class NoteController {
 
-    private Map<Long, Note> notes = new HashMap<>();
-    private long nextId = 1;
+    private final NoteService noteService;
+
+    @Autowired
+    public NoteController(NoteService noteService) {
+        this.noteService = noteService;
+    }
+
+
 
     @GetMapping("/list")
     public String listNotes(Model model) {
-        List<Note> noteList = new ArrayList<>(notes.values());
+        List<Note> noteList = noteService.getAllNotes();
         model.addAttribute("notes", noteList);
+        model.addAttribute("newNote", new Note());
+
         return "list";
     }
 
-    @GetMapping("/id")
+    @GetMapping("/edit")
     public String editNoteForm(@RequestParam long id, Model model) {
-        if (!notes.containsKey(id)) {
+        Optional<Note> optionalNote = noteService.getNoteById(id);
+        if (optionalNote.isEmpty()) {
             throw new IllegalArgumentException("Note with id " + id + " not found");
         }
-        Note note = notes.get(id);
+        Note note = optionalNote.get();
         model.addAttribute("note", note);
         return "edit";
     }
 
     @PostMapping("/edit")
     public String editNoteSubmit(@ModelAttribute Note editedNote) {
-        if (!notes.containsKey(editedNote.getId())) {
-            throw new IllegalArgumentException("Note with id " + editedNote.getId() + " not found");
-        }
-        Note existingNote = notes.get(editedNote.getId());
-        existingNote.setTitle(editedNote.getTitle());
-        existingNote.setContent(editedNote.getContent());
+        noteService.saveNote(editedNote);
         return "redirect:/note/list";
+    }
+    @GetMapping("/delete")
+    public String deleteNoteForm(@RequestParam long id, Model model) {
+        Optional<Note> optionalNote = noteService.getNoteById(id);
+        if (optionalNote.isEmpty()) {
+            throw new IllegalArgumentException("Note with id " + id + " not found");
+        }
+        Note note = optionalNote.get();
+        model.addAttribute("note", note);
+        return "delete";
     }
 
     @PostMapping("/delete")
     public String deleteNote(@RequestParam long id) {
-        if (!notes.containsKey(id)) {
-            throw new IllegalArgumentException("Note with id " + id + " not found");
-        }
-        notes.remove(id);
+        noteService.deleteNoteById(id);
         return "redirect:/note/list";
     }
 
+    @GetMapping("/add")
+    public String addNoteForm(Model model) {
+        model.addAttribute("newNote", new Note());
+        return "add";
+    }
+
+    @PostMapping("/add")
+    public String addNoteSubmit(@ModelAttribute Note newNote) {
+        noteService.saveNote(newNote);
+        return "redirect:/note/list";
+    }
 }
